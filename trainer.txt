@@ -1,0 +1,6 @@
+Hola,Hola!
+como estas?,bien y tu? que deseas hacer?
+chau, adios
+que puedes hacer?, puedo administrar paginas de facebook
+quiero dar like a una publicacion, para dar like a una publicacion escribe: 2
+quiero crear una publicacion, para crear un posteo escribe 1
