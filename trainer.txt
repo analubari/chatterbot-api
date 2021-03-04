@@ -3,7 +3,11 @@ como estas?,bien y tu? que deseas hacer?
 hacer un posteo, debes ingresar 1 para hacer un posteo
 dar like a una publicacion, debes ingresar 2 para likear un posteo
 comentario, debes ingresar 3 para hacer un comentario
-chau, adios
-que puedes hacer?, puedo administrar paginas de facebook
+salir, para salir debes ingresar chau
+que puedes hacer?, puedo administrar paginas de facebook comentar publicaciones likear y hacer comentarios
 quiero dar like a una publicacion, para dar like a una publicacion ingresa: 2
 quiero crear un posteo, para crear un posteo escribe 1
+postear una foto, para postear una foto debes ingresar 4
+foto, puedes postear una foto ingresando 4
+likear, puedes likear una publicacion ingresando 2
+hacer un post, puedes hacer un post ingresando 1
