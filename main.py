@@ -51,23 +51,34 @@ def get_user_friends(graph):
 
 def get_post_message(graph, post_id):
     # Get the message from a post.
-    post = graph.get_object(PAGE_ID, id=post_id, fields='message')
-    print(post['message'])
-    return post['message']
-
+    try:
+        post = graph.get_object(PAGE_ID, id=post_id, fields='message')
+        print(post['message'])
+        return post['message']
+    except facebook.GraphAPIError:
+        print('Ha ocurrido un error al leer el posteo')
 
 def get_post_comments(graph, post_id):
-    return graph.get_object(post_id, fields='comments')
+    try:
+        return graph.get_object(post_id, fields='comments')
+    except facebook.GraphAPIError:
+        print('Ha ocurrido un error al leer el comentario')
 
 
 def make_post(graph):
     text = input("Ingrese el texto que desea postear: ")
-    post = graph.put_object(parent_object='me', connection_name='feed', message=text)
-    print(json.dumps(post, indent=4))
+    try:
+        post = graph.put_object(parent_object='me', connection_name='feed', message=text)
+        print(json.dumps(post, indent=4))
+    except facebook.GraphAPIError:
+        print('Ha ocurrido un error al realizar la publicacion.')
 
 
 def put_comment(graph, post_id, text):
-    return graph.put_comment(object_id=post_id, message=text)
+    try:
+        return graph.put_comment(object_id=post_id, message=text)
+    except facebook.GraphAPIError:
+        print('Ha ocurrido un error al realizar el comentario.')
 
 
 def make_comment(graph):
@@ -75,25 +86,32 @@ def make_comment(graph):
     message = input('Ingrese el comentario que desea hacer: ')
     while not message:
         message = input('Ingrese el comentario que desea hacer: ')
-    comment = put_comment(graph, post_id, message)
-    print(json.dumps(comment, indent=4))
+        comment = put_comment(graph, post_id, message)
+        print(json.dumps(comment, indent=4))
 
 
 def put_like(graph, object_id):
-    like = graph.put_like(object_id)
-    print(like)
+    try:
+        like = graph.put_like(object_id)
+        print(like)
+    except facebook.GraphAPIError:
+        print('Ha ocurrido un error al likear la publicacion.')
 
 
 def put_photo(graph, photo_jpg, text):
     # Upload an image with a caption.
     # nombre del archivo de la foto
-    photo_id = graph.put_photo(image=open(photo_jpg, 'rb'), message=text)
-    return photo_id
+    try:
+        photo_id = graph.put_photo(image=open(photo_jpg, 'rb'), message=text)
+        return photo_id
+    except FileNotFoundError or facebook.GraphAPIError:
+        print('Ha ocurrido un error al publicar la foto.')
 
 
 def post_photo(graph):
-    photo_jpg = input('Ingrese el nombre de la foto que desea subir: ')
-    while '.jpg' not in photo_jpg:
+    photo_jpg = input('Ingrese el nombre de la foto que desea subir con la terminacion .jpg: ')
+
+    while '.jpg' not in photo_jpg and photo_jpg.path.isfile(photo_jpg):
         photo_jpg = input('Ingrese el nombre de la foto que desea subir: ')
 
     message = input('Ingrese el mensaje que desea postear junto a la foto: ')
@@ -123,7 +141,8 @@ def searh_users(graph, user_id):
 
 def enter_object_id():
     object_id = input('Ingrese el id del post o comentario deseado: ')
-    return int(object_id)
+
+    return object_id
 
 
 def liking_post(graph):
@@ -141,42 +160,49 @@ def read_line(file):
 
 def read_file(file_name):
     conversation = []
-    with open(file_name) as file:
-        user_response, chatbot_response = read_line(file)
-        while user_response:
-            conversation.append(user_response)
-            conversation.append(chatbot_response)
+    try:
+        with open(file_name, 'r') as file:
             user_response, chatbot_response = read_line(file)
-        return conversation
+            while user_response:
+                conversation.append(user_response)
+                conversation.append(chatbot_response)
+                user_response, chatbot_response = read_line(file)
+            return conversation
+    except IOError:
+        print("Error ese archivo no existe.")
+
+
+def write_file(file_name,conversation_user_bot):
+    with open(file_name, 'w') as file:
+        for p in conversation_user_bot:
+            file.write(p[0] + ',' + p[1] + ','+p[2]+','+p[3]+'\n')
+
 
 def main():
     token = ACCESS_TOKEN
     graph = facebook.GraphAPI(token)
+    now = datetime.now()
+    conversation_user_bot = []
     conversation = read_file('trainer.txt')
     chatbot = chatterbot(conversation)
 
     peticion = input('Tú: ')
     while peticion != 'chau':
         response = chatbot.get_response(peticion)
-        print(response)
+        conversation_user_bot.append((str(now.date()), str(now.hour) + ':' + str(now.minute) + ':' + str(now.second), peticion, str(response)))
+
         if peticion == '1':
             make_post(graph)
         elif peticion == '2':
             liking_post(graph)
         elif peticion == '3':
             make_comment(graph)
+        elif peticion == '4':
+            post_photo(graph)
+        print(response)
         peticion = input('Tú: ')
 
-    profile = get_profile(graph, USER_ID)
-    page_info = get_page_info(graph, PAGE_ID)
-    put_like(graph, '109631641178334')
-
-    # print('Printing profile: ')
-    # print(friends)
-    #print(json.dumps(profile, indent=4))
-    #print(type(json.dumps(profile, indent=4)))
-    #print(json.dumps(page_info, indent=4))
-    print(conversation)
+    write_file('log.txt', conversation_user_bot)
 
 
 if __name__ == '__main__':
